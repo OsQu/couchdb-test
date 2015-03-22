@@ -22,6 +22,15 @@ Vagrant.configure(2) do |config|
 
       box_config.vm.provision "chef_solo" do |chef|
         chef.add_recipe "couchdb"
+        chef.json = {
+          "couch_db" => {
+            "config" => {
+              "httpd" => {
+                "bind_address" => "0.0.0.0"
+              }
+            }
+          }
+        }
       end
     end
   end
