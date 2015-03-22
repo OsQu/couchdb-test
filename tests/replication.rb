@@ -1,10 +1,10 @@
 require 'couchrest'
 
-lab1 = CouchRest.database!("http://lab1:5984/test")
-lab2 = CouchRest.database!("http://lab2:5984/test")
-lab3 = CouchRest.database!("http://lab3:5984/test")
-lab4 = CouchRest.database!("http://lab4:5984/test")
-lab5 = CouchRest.database!("http://lab5:5984/test")
+lab1 = CouchRest.database("http://lab1:5984/test")
+lab2 = CouchRest.database("http://lab2:5984/test")
+lab3 = CouchRest.database("http://lab3:5984/test")
+lab4 = CouchRest.database("http://lab4:5984/test")
+lab5 = CouchRest.database("http://lab5:5984/test")
 
 writes = []
 numbers = (1..2000)

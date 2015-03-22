@@ -9,12 +9,12 @@ group 'master' do
 
   each_host do
     user "vagrant"
-    role :base
+    role :network
     role :couchdb
   end
 end
 
-role :base do
+role :network do
   task :iptables do
     sudo { iptables "--list", echo: true }
   end
@@ -25,8 +25,8 @@ role :base do
   end
 
   task :drop do
-    log("Dropping packets 50% 25%")
-    sudo { exec! 'tc qdisc add dev eth1 root netem loss 50% 25%' }
+    log("Dropping packets 20% 25%")
+    sudo { exec! 'tc qdisc add dev eth1 root netem loss 20% 25%' }
   end
 
   task :heal_network do
