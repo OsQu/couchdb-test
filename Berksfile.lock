@@ -1,0 +1,21 @@
+DEPENDENCIES
+  couchdb
+
+GRAPH
+  apt (2.6.1)
+  build-essential (2.2.0)
+  couchdb (2.5.2)
+    erlang (>= 0.0.0)
+    yum (~> 3.0)
+    yum-epel (>= 0.0.0)
+  erlang (1.5.7)
+    apt (>= 1.7.0)
+    build-essential (>= 0.0.0)
+    yum (~> 3.0)
+    yum-epel (>= 0.0.0)
+    yum-erlang_solutions (>= 0.0.0)
+  yum (3.5.3)
+  yum-epel (0.6.0)
+    yum (~> 3.0)
+  yum-erlang_solutions (0.2.0)
+    yum (~> 3.0)

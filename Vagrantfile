@@ -11,14 +11,18 @@ local = ["127.0.0.1\tlocalhost"]
 
 hosts_str = (local + hosts).join("\n")
 
-
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
+  config.berkshelf.enabled = true
 
   boxes.each do |box|
     config.vm.define box[:name] do |box_config|
       box_config.vm.network "private_network", ip: box[:ip]
       box_config.vm.provision "shell", inline: "echo '#{hosts_str}' > /etc/hosts"
+
+      box_config.vm.provision "chef_solo" do |chef|
+        chef.add_recipe "couchdb"
+      end
     end
   end
 
