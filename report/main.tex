@@ -1,0 +1,94 @@
+% ---------------------------------------------------------------------
+% -------------- PREAMBLE ---------------------------------------------
+% ---------------------------------------------------------------------
+\documentclass[12pt,a4paper,finnish,oneside]{article}
+\usepackage[utf8]{inputenc}   % merkistökoodaus, jos käytetään UTF8:a
+\usepackage{ae,aecompl}       % ed. lis. vektorigrafiikkana bittikartan sijasta
+\usepackage[english,finnish,swedish]{babel}
+% Kurssin omat asetukset aaltosci_t.sty:
+\usepackage{aaltosci_t}
+
+\usepackage{alltt}
+\usepackage{amsmath}   % matematiikkaa
+\usepackage{calc}      % käytetään laskurien (counter) yhteydessä (tiedot.tex)
+\usepackage{eurosym}   % eurosymboli: \euro{}
+\usepackage{url}       % \url{...}
+\usepackage{listings}  % koodilistausten lisääminen
+\usepackage{algorithm} % algoritmien lisääminen kelluvina
+\usepackage{algorithmic} % algoritmilistaus
+\usepackage{hyphenat}  % tavutuksen viilaamiseen liittyvä (hyphenpenalty,...)
+\usepackage{supertabular,array}  % useampisivuinen taulukko
+\usepackage[iso,german]{isodate}
+
+% Rangaistaan tavutusta (ei toimi?! Onko hyphenat-paketti asennettu?)
+\hyphenpenalty=10000   % rangaistaan tavutuksesta, 10000=ääretön
+\tolerance=1000        % siedetään välejä riveillä
+
+\bibpunct{[}{]}{;}{n}{,}{,}    % n = numero [1],[2] (numerical style)
+
+% Rivivälin muuttaminen:
+\linespread{1.24}\selectfont               % riviväli 1.5
+%\linespread{1.24}\selectfont               % riviväli 1, kun kommentoit pois
+
+% ---------------------------------------------------------------------
+% -------------- DOCUMENT ---------------------------------------------
+% ---------------------------------------------------------------------
+
+\begin{document}
+
+% -------------- Tähän dokumenttiin liittyviä valintoja  --------------
+
+\input{makroja}       % Haetaan joitakin makroja
+
+\selectlanguage{english}
+
+\pagestyle{plain}
+\pagenumbering{arabic}
+
+\author{Oskari Virtanen}
+
+% Otsikko nimiölehdelle. Yleensä sama kuin seuraavana oleva \TITLE, 
+% mutta jos nimiölehdellä tarvetta "kaksiosaiselle" kaksiriviselle
+\title{CouchDB Report}
+% 2-osainen otsikko:
+%\title{\LaTeX{}-pohja kandidaatintyölle \\[5mm] Pitkiä rivejä kokeilun vuoksi.}
+
+% Ohjaajan laitos suomi/ruotsi ja tarvittaessa eng (tiivistelmän kieli/kielet)
+\DATE{\today}
+\maketitle             % tehdään nimiölehti
+
+% -------------- Tiivistelmä / abstract -------------------------------
+% Lisää abstrakti kandikielellä (ja halutessasi lisäksi englanniksi).
+
+% Edelleen sivunumerointiin. Eräs ohje käskee aloittaa sivunumeroiden
+% laskemisen nimiösivulta kuitenkin niin, että sille ei numeroa merkitä
+% (Kauranen, luku 5.2.2). Näin ollen ensimmäisen tiivistelmän sivunumero
+% on 2. \maketitle komento jotenkin kadottaa sivunumeronsa.
+\setcounter{page}{2}    % sivunumeroksi tulee 2
+
+\newpage                       % pakota sivunvaihto
+
+% -------------- Sisällysluettelo / TOC -------------------------------
+
+\tableofcontents
+
+\clearpage                     % kappale loppuu, loput kelluvat tänne, sivunv.
+%\newpage
+
+% -------------- Symboli- ja lyhenneluettelo -------------------------
+% Lyhenteet, termit ja symbolit.
+% Suositus: Käytä vasta kun paljon symboleja tai lyhenteitä.
+%
+
+% TODO: DO IT LIKE THIS!
+\input{sections/introduction}
+\input{sections/background}
+\input{sections/test_setup}
+\input{sections/experiments}
+\input{sections/conclusion}
+
+\newpage
+\bibliographystyle{aaltosci_t}
+\addcontentsline{toc}{section}{\refname}  % article
+
+\end{document}
