@@ -20,6 +20,10 @@ role :couchdb do
     sudo { iptables "--list", echo: true }
   end
 
+  task :log do
+    sudo { tail "-f", "/var/log/couchdb/couch.log", echo: true }
+  end
+
   task :slow do
     log("Slowing down network 100ms 20ms")
     sudo { exec! 'tc qdisc add dev eth1 root netem delay 100ms 20ms distribution normal' }
