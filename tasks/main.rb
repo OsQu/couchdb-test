@@ -1,3 +1,5 @@
+load __DIR__/'couchdb.rb'
+
 group 'master' do
   host 'lab1'
   host 'lab2'
@@ -7,21 +9,14 @@ group 'master' do
 
   each_host do
     user "vagrant"
+    role :base
     role :couchdb
   end
 end
 
-role :couchdb do
-  task :ping do
-    curl "http://localhost:5984", echo: true
-  end
-
+role :base do
   task :iptables do
     sudo { iptables "--list", echo: true }
-  end
-
-  task :log do
-    sudo { tail "-f", "/var/log/couchdb/couch.log", echo: true }
   end
 
   task :slow do
