@@ -11,7 +11,7 @@ role :couchdb do
   end
 
   task :log do
-    sudo { tail "-f", "/var/log/couchdb/couch.log", echo: true }
+    sudo { tail "-F", "/var/log/couchdb/couch.log", echo: true }
   end
 
   task :create_db do
