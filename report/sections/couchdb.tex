@@ -1,3 +1,68 @@
 \section{CouchDB}
 
-blablabla
+CouchDB is a distributed database that provides eventual
+consistency\cite{anderson2010couchdb}. It is designed around web technologies:
+it stores its documents in JSON format and all the communication internally and
+externally is done over HTTP\@. CouchDB is modeled around high availability
+which categorizes it as AP system.
+
+A CouchDB cluster consists of several identical nodes running CouchDB instances.
+A traditional distributed architecture has a single master node that handles all
+the writes the system. Leader node then replicates these writes to several
+slave nodes that can also respond to read requests by clients. Master/slave
+architecture does not scale well to large scale for two reasons. First, since
+all the write requests go through a single node, that node need to have enough
+processing power to handle all the request. Only way to scale to larger amount
+of write requests is to scale vertically which gets very expensive for high-end
+hardware. Second, master node acts as a single point of failure in the system.
+When master node fails, the distributed system can not process any write
+requests until it selects a new master.
+
+Instead of master/slave architecture, each node in CouchDB cluster acts as an
+independent instance that can handle reads and writes. This enables high
+availability for the cluster: even if several nodes fail, the system is still
+able to process requests. However as proven by CAP theorem, the high
+availability comes with a cost: the system is no longer able to maintain
+consistency between the nodes. This can affect user in certain ways, for example
+user can write a document to the database and get \texttt{not\_found} error when
+trying to read it moments later. This happens because database has not had time
+to replicate the write operation to other node, which user used to read the
+document.
+
+Replication in CouchDB is done asynchronously. The replication can happen
+periodically or after a replication command from the user depending on the
+configuration. Upon replication CouchDB compares the two databases to find out
+which documents on the source differ from the target and then sends these
+changes as batches until all the changes are transferred.
+
+To find out which documents has changed, databases in CouchDB have a sequence
+number which is incremented every time the database is changed. That way CouchDB
+is able to tell efficiently what happened between two sequences and can send
+only changed data during replication.
+
+The client receives a successful response from the server after a single node
+have processed the query. It makes no guarantees that any other node have
+received or processed the query because replication takes place later. This
+makes both, processing the query and replication straight forward and provides
+highly available system. However, because no guarantees about replication is
+made, the system can lose all the updates after last replication if the data on
+the single machine is corrupted for example due a hardware failure.
+
+It is possible to model replication differently and still have an AP system.
+Riak is a distributed database that is designed based on Amazon's Dynamo
+architecture\cite{decandia2007dynamo}. Riak stores objects associated with a key
+to the database. It uses consistent hashing\cite{karger1997consistent} to map
+the keys to the data so that single machine can acts as many virtual nodes in
+the hash ring. Riak replication can be configured with multiple factors. Riak
+can be configured to replicate the data up to \texttt{N} nodes in the ring, and
+clients can define \texttt{R} value upon read request. Riak returns the value
+associated with the key when it receives a value from \texttt{R} nodes of
+\texttt{N}. For write request the same value is called \texttt{W}. Now when
+client sends a write request, it can define to how many nodes Riak needs to
+replicate the data until the request is considered successful. To simulate
+CouchDB's behaviour, \texttt{R=W=1} could be used, but to achieve stronger
+durability a greater value should be used.
+
+% TODO: clustering
+%Another problem\todo{if this is another problem, we need to introduce
+%first problem (durability)} with large distributed systems is that data can be
