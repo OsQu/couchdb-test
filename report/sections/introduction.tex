@@ -18,12 +18,56 @@ CAP theorem to consider a distributed system available, it needs to response to
 every request received by non-failing node. Partition tolerance means that the
 system needs to tolerate partitions in the network i.e.\ the network
 can drop arbitrary amount of packages and the system should still remain
-functional. 
+functional.
 
 Since perfect network is impossible to build, network partitions will occur.
 Based on the CAP theorem, a distributed system can not be consistent and
 available at the same time, so distributed systems need to choose whether they
 keep their data consistent at all times and refuse to response to some of the
 queries, or remain available during partition but give up on the data
-consistency.
+consistency. Systems that choose to be consistent during network partition are
+categorized as CP, and systems that choose to be available are categorized as
+AP.\
 
+CP systems can guarantee consistency by making sure that majority of non-failing
+nodes in the cluster has received the operation before sending client a
+successful response. In case of network partition the system is split in to two
+ore more smaller networks. The partition with majority of nodes can still accept
+operations and they are replayed to nodes in the minority partitions when the
+partition heals. However nodes in the minority partition can not accept any
+operations, because they could be overridden by majority when the network heals
+and that would violate consistency. One example of a CP system is
+Raft consensus algorithm\cite{ongaro2014search}.\todo[inline]{Need to elaborate
+RAFT?}
+
+AP systems guarantee availability by always accepting operations to every
+non-failing node. This causes the system to be inconsistent because some
+previous operations might not have been reached the node processing a request so
+it is operating on inconsistent view of the system. However in case of a network
+partition, AP system will continue responding to requests even with minority
+partition. When the partition heals, the system needs a way to solve conflicting
+operations to the same document that happened on the different sides of the
+partition\todo{Mention something about conflict resolution}. The simplest way is
+to always choose the most recent operation called Last-Write-Wins (LWW). The
+problem with LWW is that it will discard losing writes and that could
+potentially cause the system to lose data. Another approach is to try to merge
+conflicting operations. However it can be shown that there exists no universal
+merge function\todo{citation needed}. Some AP systems allows a user to write
+their own merge function which is applied when the system detects a conflict.
+Based on the business requirements of the user, this might or might be not
+feasible. It is also possible to use data types that eliminate the possibility
+of conflicts.\todo[inline]{Mention eventual consistency?}
+
+Letia et al.\ introduced Commutative Replicate Data Types
+(CRDT)\cite{letia2009crdts} which ensures that there are no conflicts between
+different versions of the data. They show that if concurrent updates to some
+datum commute and all the replicas execute all updates in casual order, then the
+replicas converge. This means that the system doesn't have to remain consistent
+at all times in order to reach consistency eventually. A simple example of a
+CRDT is \emph{set} with only addition operation. Since addition operation
+commute, it can be applied to all replicas in different order and still the
+system would reach the same state. Problem with CRDTs are that they are not
+universal. While currently known CRDTs can be quite complex, they do not offer a
+solution for every problem thus their usage need to be considered case by case.
+
+\todo[inline]{Structure of the paper here}
