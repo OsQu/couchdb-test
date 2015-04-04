@@ -55,14 +55,33 @@ to the database. It uses consistent hashing\cite{karger1997consistent} to map
 the keys to the data so that single machine can acts as many virtual nodes in
 the hash ring. Riak replication can be configured with multiple factors. Riak
 can be configured to replicate the data up to \texttt{N} nodes in the ring, and
-clients can define \texttt{R} value upon read request. Riak returns the value
-associated with the key when it receives a value from \texttt{R} nodes of
-\texttt{N}. For write request the same value is called \texttt{W}. Now when
+clients can define value \texttt{R} upon read request. Riak returns the value
+associated with the key when it receives a response from \texttt{R} nodes of
+\texttt{N}. For write request the same value is called \texttt{W}. When the
 client sends a write request, it can define to how many nodes Riak needs to
 replicate the data until the request is considered successful. To simulate
 CouchDB's behaviour, \texttt{R=W=1} could be used, but to achieve stronger
 durability a greater value should be used.
 
-% TODO: clustering
-%Another problem\todo{if this is another problem, we need to introduce
-%first problem (durability)} with large distributed systems is that data can be
+When CouchDB replicates updates from one server to another, it is possible that
+the same document was updated in both servers. The document can not be just
+transferred because that would override the change that was made on the target
+server. Instead, CouchDB marks the document as conflicted and deterministically
+stores both versions in a way that they are same in both servers. Then the user
+is required to resolve the conflict by either choosing one of the versions or
+trying to merge them.
+
+CouchDB detects conflicts between versions by comparing their \emph{revision
+ids}. The database assigns revision id to each document it stores, and it is
+increment by one each time the document updated. Because multiple servers can
+update the same revision independently, the revision id also contains a MD5 hash
+of the data stored in the document. If the documents have different revision ids
+they are conflicting.\todo[inline]{Now there's plenty of weird stuff here: ID is
+basically \texttt{<rev\_num>-MD5(document)}. Is the algorithm able to notice
+consecutive edits that do not conflict and not mark them, what about emerging
+branches with different revision numbers and conflicting data? Riak handles
+these with dotted version vectors, Dynamo with vector clocks.}
+
+% TODO: Clustering
+% Another problem\todo{if this is another problem, we need to introduce
+% first problem (durability)} with large distributed systems is that 
