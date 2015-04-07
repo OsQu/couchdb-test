@@ -81,7 +81,58 @@ basically \texttt{<rev\_num>-MD5(document)}. Is the algorithm able to notice
 consecutive edits that do not conflict and not mark them, what about emerging
 branches with different revision numbers and conflicting data? Riak handles
 these with dotted version vectors, Dynamo with vector clocks.}
+\todo[inline]{Should MVCC be mentioned here?}
 
-% TODO: Clustering
-% Another problem\todo{if this is another problem, we need to introduce
-% first problem (durability)} with large distributed systems is that 
+These problems are also present in other distributed databases that allow
+updates to the documents without having a consistent state of the data. This is
+often true with AP systems such as Dynamo or Riak.
+
+Dynamo tracks changes to objects using vector clocks. Each time object is
+updated, it is assigned with a vector clock associated with the client that made
+the change. When the updates are done concurrently and they branch, the database
+can figure out the causality between the changes and automatically apply
+consecutive updates. It also notices conflicts between the versions, and can
+present those to user for a semantic reconciliation.
+
+A problem with vector clocks is that the size of the clocks might grow
+unbounded. If the same object is accessed with many clients, the object gets
+assigned with a vector clock for each client. This takes space and slows down
+algorithm detecting conflicts. For that reason, Riak has changed its conflict
+resolution algorithm to use dotted version vectors\cite{preguicca2010dotted}.
+Dotted version vectors work very similarly than vector clocks, but they also
+include a context (called dot) where the last update was made, and the system
+can safely discard earlier vectors that were seen by all parties.
+
+Usually distributed databases are designed to store extremely large amount of
+data. They achieve this by dividing the database instances to smaller partitions
+called clusters. Clusters are responsible of storing and managing a portions of
+the data stored in the database.
+
+As well as Riak and Dynamo, CouchDB uses consistent hashing to determine to
+which shard it routes the request. CouchDB hashes the document ID with
+CRC32-based hash algorithm, and looks up from hash ring to which server the
+document is stored. The hash ring mapping is stored into each proxy that handles
+the requests. Because it is static, it does not automatically adapt to the
+changes in the hash topology, such as removal of the node. The documentation of
+CouchDB also suggests that a tree of proxies should be used for very large
+clusters. The database shards are replaced with intermediate proxies that
+then connect to the database shards.\todo[inline]{Manually configuration sounds
+very prone to human errors, can this be included here, albeit I don't have any
+references to back up my gut feeling?}
+
+Unlike Riak, CouchDB doesn't provide a way to employ virtual nodes. With virtual
+nodes, the hash ring would be split into more nodes than there are physical
+servers. Also the number of nodes could be changed, and consistent hashing takes
+care that no more data is moved between physical nodes than necessary. This way
+the data is distributed equally between physical nodes and the cluster could be
+expanded just by adding virtual nodes.
+
+CouchDB however embraces a technique called \emph{oversharding}. In oversharding
+the cluster is partitioned so that there are multiple shards in the same
+physical machine. When the size of a shard grows too large, it can be moved to
+the another machine or split to smaller shards. This is similar to the virtual
+nodes, but the amount of shards have to be guessed before hand, and moving or
+splitting shards often require human intervention, although databases with
+automatic sharding exists, such as MongoDB\@\footnote{Documentation about
+MongoDB sharding, including automatic sharding can be found from
+http://docs.mongodb.org/manual/sharding/}.
