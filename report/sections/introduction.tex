@@ -8,17 +8,17 @@ available, partition tolerant and eventually consistent.
 Distributed systems are often categorized to two categories based on their
 attributes. The categorization is made using CAP
 theorem\cite{gilbert2002brewer}. CAP theorem states that it is impossible for a
-web service to simultaneously guarantee consistency, availability and partition
-tolerance. These properties are highly desirable for a distributed system.
-Consistency in the CAP theorem means that there exists an order of operations
-that is equivalent as if all the operations were completed by a single
-instance. In practice this means that the results of operations the distributed
-system completes need to be communicated to the every node of the system. For
-CAP theorem to consider a distributed system available, it needs to response to
-every request received by non-failing node. Partition tolerance means that the
-system needs to tolerate partitions in the network i.e.\ the network
-can drop arbitrary amount of packages and the system should still remain
-functional.
+web service to simultaneously guarantee \emph{consistency}, \emph{availability}
+and \emph{partition tolerance}. These properties are highly desirable for a
+distributed system.  Consistency in the CAP theorem means that there exists an
+order of operations that is equivalent as if all the operations were completed
+by a single instance. In practice this means that the results of operations the
+distributed system completes need to be communicated to the every node of the
+system. For CAP theorem to consider a distributed system available, it needs to
+response to every request received by non-failing node. Partition tolerance
+means that the system needs to tolerate partitions in the network i.e.\ the
+network can drop arbitrary amount of packages and the system should still
+remain functional.
 
 Since perfect network is impossible to build, network partitions will occur.
 Based on the CAP theorem, a distributed system can not be consistent and

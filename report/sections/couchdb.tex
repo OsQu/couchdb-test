@@ -11,22 +11,23 @@ A traditional distributed architecture has a single master node that handles all
 the writes the system. Leader node then replicates these writes to several
 slave nodes that can also respond to read requests by clients. Master/slave
 architecture does not scale well to large scale for two reasons. First, since
-all the write requests go through a single node, that node need to have enough
+all the write requests go through a single node, that node needs to have enough
 processing power to handle all the request. Only way to scale to larger amount
-of write requests is to scale vertically which gets very expensive for high-end
+of write requests is to scale vertically, which gets very expensive for high-end
 hardware. Second, master node acts as a single point of failure in the system.
 When master node fails, the distributed system can not process any write
-requests until it selects a new master.
+requests until it selects a new master or the original master recovers from the
+failure.
 
 Instead of master/slave architecture, each node in CouchDB cluster acts as an
 independent instance that can handle reads and writes. This enables high
 availability for the cluster: even if several nodes fail, the system is still
-able to process requests. However as proven by CAP theorem, the high
+able to process requests. However, as proven by CAP theorem, the high
 availability comes with a cost: the system is no longer able to maintain
 consistency between the nodes. This can affect user in certain ways, for example
 user can write a document to the database and get \texttt{not\_found} error when
 trying to read it moments later. This happens because database has not had time
-to replicate the write operation to other node, which user used to read the
+to replicate the write operation to other node, which the user used to read the
 document.
 
 Replication in CouchDB is done asynchronously. The replication can happen
@@ -53,35 +54,35 @@ Riak is a distributed database that is designed based on Amazon's Dynamo
 architecture\cite{decandia2007dynamo}. Riak stores objects associated with a key
 to the database. It uses consistent hashing\cite{karger1997consistent} to map
 the keys to the data so that single machine can acts as many virtual nodes in
-the hash ring. Riak replication can be configured with multiple factors. Riak
-can be configured to replicate the data up to \texttt{N} nodes in the ring, and
-clients can define value \texttt{R} upon read request. Riak returns the value
-associated with the key when it receives a response from \texttt{R} nodes of
-\texttt{N}. For write request the same value is called \texttt{W}. When the
-client sends a write request, it can define to how many nodes Riak needs to
-replicate the data until the request is considered successful. To simulate
-CouchDB's behaviour, \texttt{R=W=1} could be used, but to achieve stronger
-durability a greater value should be used.
+the hash ring. Riak's replication is determined by multiple factors. Riak can be
+configured to replicate the data up to \texttt{N} nodes in the ring, and clients
+can define value \texttt{R} upon read request. Riak returns the value associated
+with the key when it receives a response from \texttt{R} nodes out of \texttt{N}.
+For write request the same value is called \texttt{W}. When the client sends a
+write request, it can define to how many nodes Riak needs to replicate the data
+to until the request is considered successful. To simulate CouchDB's behaviour,
+\texttt{R=W=1} could be used, but higher values provider higher durability and
+consistency.
 
-When CouchDB replicates updates from one server to another, it is possible that
-the same document was updated in both servers. The document can not be just
-transferred because that would override the change that was made on the target
-server. Instead, CouchDB marks the document as conflicted and deterministically
-stores both versions in a way that they are same in both servers. Then the user
-is required to resolve the conflict by either choosing one of the versions or
-trying to merge them.
+When CouchDB database replicates updates from one server to another, it is
+possible that the same document was updated in both servers. The document can
+not be transferred because that would override the change that was made on the
+target server. Instead, CouchDB marks the document as conflicted and
+deterministically stores both versions in a way that their order is same in both
+servers. Then the user is required to resolve the conflict by either choosing
+one of the versions or trying to merge them.
 
-CouchDB detects conflicts between versions by comparing their \emph{revision
-ids}. The database assigns revision id to each document it stores, and it is
-increment by one each time the document updated. Because multiple servers can
-update the same revision independently, the revision id also contains a MD5 hash
-of the data stored in the document. If the documents have different revision ids
-they are conflicting.\todo[inline]{Now there's plenty of weird stuff here: ID is
-basically \texttt{<rev\_num>-MD5(document)}. Is the algorithm able to notice
-consecutive edits that do not conflict and not mark them, what about emerging
-branches with different revision numbers and conflicting data? Riak handles
-these with dotted version vectors, Dynamo with vector clocks.}
-\todo[inline]{Should MVCC be mentioned here?}
+CouchDB detects conflicts between versions by comparing \emph{revision ids} of
+the documents. The database assigns revision id to each document it stores, and
+it is incremented by one each time the document is updated. Because multiple
+servers can update the same revision independently, the revision id also
+contains a MD5 hash of the data stored in the document. If the documents have
+different revision ids they are conflicting.\todo[inline]{Now there's plenty of
+weird stuff here: ID is basically \texttt{<rev\_num>-MD5(document)}. Is the
+algorithm able to notice consecutive edits that do not conflict and not mark
+them, what about emerging branches with different revision numbers and
+conflicting data?  Riak handles these with dotted version vectors, Dynamo with
+vector clocks.} \todo[inline]{Should MVCC be mentioned here?}
 
 These problems are also present in other distributed databases that allow
 updates to the documents without having a consistent state of the data. This is
