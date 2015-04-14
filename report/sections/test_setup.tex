@@ -1,12 +1,54 @@
-\section{Test setup}
+\section{Experiment setup}
 
-Explain the setup that was used for experiments.
+\missingfigure{Figure of the test cluster}
 
-\begin{itemize}
-  \item Vagrant, Chef
-  \item salticid
-  \begin{itemize}
-    \item tasks
-  \end{itemize}
-  \item test scripts
-\end{itemize}
+For the experiment, five virtual servers were deployed on the private network
+using Vagrant. The servers ran Ubuntu 14.04 and CouchDB 1.5.0 was installed
+using Chef.
+
+CouchDB was installed using standard settings and each server communicated
+directly with each other.
+
+\todo[inline]{Fill in the couchdb cluster layout}
+
+Two kinds of disturbances were simulated in the test network. First the network
+was partitioned in a way, that servers 1 to 3 could not communicate with servers
+4 and 5, but were able to communicate directly. Second disturbance was to slow
+down the network and to cause it to lose packets.
+
+The network partition was done using \texttt{iptables} to configure the kernel
+to drop packets from corresponding servers. For example to disconnect servers 1
+and 2 from rest of the cluster, following command was executed:
+
+\begin{verbatim}
+  iptables -A INPUT -s <server_host> -j DROP
+\end{verbatim}
+
+where \texttt{server\_host} was a host of the server stored in
+\texttt{/etc/hosts}.
+
+Network slowness and packet loss was caused using \texttt{tc} utility. It is a
+tool used to configure Traffic Control in the Linux kernel and can be used
+simulate different network problems. To configure a network interface to slow
+transmission of the packets, following command was executed:
+
+\begin{verbatim}
+  tc qdisc add dev eth1 root netem delay 100ms 20ms distribution normal
+\end{verbatim}
+
+This causes \texttt{eth1} network interface to delay packets by 100ms\(\pm\)20ms
+using a normal distribution. In a similar manner, packet loss was caused by
+executing a following command:
+
+\begin{verbatim}
+  tc qdisc add dev eth1 root netem loss 20% 25%
+\end{verbatim}
+
+This causes \texttt{eth1} network interface to lost 20\% of packets, and each
+successive probability depends by 25\% of the previous one.
+
+The commands were executed to the servers using
+Salticid\footnote{https://github.com/aphyr/salticid}. It is a relatively simple
+tool used to run commands on multiple servers over SSH\@. The Salticid roles and
+tasks used in the experiment are located on
+GitHub\footnote{https://github.com/OsQu/couchdb-test}.
