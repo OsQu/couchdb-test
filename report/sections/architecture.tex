@@ -117,4 +117,75 @@ interactive visualization about the leader election.
 
 \subsection{AP-systems}
 
-\missingfigure{AP-system}
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.7]{pictures/ap_system.png}
+  \caption{AP-system where client 1.\ sends a write request which is replicated
+  to all the nodes and is read afterwards by client 2.}
+\label{apimage}
+\end{figure}
+
+AP-systems choose to be available in the event of network partition instead of
+keeping the data consistent at all times. In practice this means that all nodes
+of the cluster are allowed to handle both read and writes requests from clients
+and there is no dedicated master node. After receiving the request, the
+node can either handle the request itself or delegate it to more appropriate
+node for processing. Depending from the architecture, the write may be
+acknowledged when the handling node has received it, or it might require
+acknowledges from multiple nodes. After a successful write of an object, the
+object is replicated to other nodes for a better durability and availability.
+Even if a node that originally handled the write request is unavailable, the
+cluster is able to respond to the request.
+
+Figure~\ref{apimage} shows an AP-system with four nodes and two clients. First
+client \(1\) sends a write request to the node \(B\) which acknowledges it
+immediately, displayed as a dashed line. It then replicates the object to the
+other nodes. Later client \(2\) sends a read request for the same object that
+can be handled by \(D\) since it has received the object. Next consider a case
+where the network is split into two different groups, client \(1\) and nodes
+\(A\) and \(B\) belong to the first group and client \(2\) and nodes \(C\) and
+\(D\) to second.
+
+Because AP-systems promote availability over consistency, the system should be
+able to accept writes even if the network in the cluster is malfunctioning. In
+the situation of the example but with a partitioned network, client \(1\) had
+sent the write request, and the write would have been acknowledged normally.
+However \(B\) would have been unable to replicate the object to the nodes in the
+other side of the partition and client \(2\) had got \texttt{not\_found}
+response from node \(D\). This shows an important characteristics of AP-systems,
+because consistency is sacrificed to obtain better availability, the service
+might get into an inconsistent state but still return successful response codes
+to the user. In contrast, CP-system would have rejected the write request from
+\(1\) because it could not reach other nodes thus making the system unavailable.
+
+Another interesting problem arises when a network partition heals. Assume that
+both sides of the partition have received an update to the same object. Because
+AP-systems do not require the write is acknowledged by majority of nodes, both
+sides might end up with its own version of the same object. When the network
+heals, both sides try to replicate their version to the other side but run into
+a problem. Which version is correct?
+
+Some systems solve the problem by tracking the time when an update was received
+and then choosing an object with higher timestamp. This solves the problem, but
+effectively destroys updates received by the other object. The system might keep
+the discarded version safe so the user can try to manually merge the two
+versions later. It might be tempting to try to write an universal merge function
+that merges the changes from both objects in all cases. However it can be shown
+that such function does not exists\todo{how is this done?}.
+
+Because it is impossible for the AP-system to recover from all conflict cases, a
+careful thought should be placed on the conflict detection. Although concurrent
+updates by different clients always end up in conflict, it is possible to
+automatically solve serializable updates if detected correctly. A naive way to
+detect a conflict between two versions is to compare the hashes of the versions
+and check whether they differ. However this approach might lead into a false
+positives that can be eliminated.
+
+TODO: Example, client 1 creates an object and after replication a network
+partition occurs. Now client 1 updates ``left'' side once. Then client 2 reads
+an updated document from ``left'' side and updates it to the ``right'' side.
+Because the history is serializable we should be able to merge the history
+automatically, (first a write from 1, then write from 2), but when comparing
+only hash we don't know that. Vector clocks solve the issue. (Assign a clock for
+both clients, and then on the merge the ``right'' side knows it has a ascendant
+of the ``left'' side's version). Serve with nice images.
