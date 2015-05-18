@@ -181,11 +181,59 @@ detect a conflict between two versions is to compare the hashes of the versions
 and check whether they differ. However this approach might lead into a false
 positives that can be eliminated.
 
-TODO: Example, client 1 creates an object and after replication a network
-partition occurs. Now client 1 updates ``left'' side once. Then client 2 reads
-an updated document from ``left'' side and updates it to the ``right'' side.
-Because the history is serializable we should be able to merge the history
-automatically, (first a write from 1, then write from 2), but when comparing
-only hash we don't know that. Vector clocks solve the issue. (Assign a clock for
-both clients, and then on the merge the ``right'' side knows it has a ascendant
-of the ``left'' side's version). Serve with nice images.
+Consider a case where two clients are connected to the cluster containing two
+nodes. Each time a cluster receives a write request, it immediately acknowledges
+it to the client and then goes to replicate it to other clients. Each node is
+also allowed to handle read requests.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.7]{pictures/apexample.png}
+  \caption{Two clients updating the same object during network partition}
+\label{ap-example}
+\end{figure}
+
+Figure~\ref{ap-example} presents two clients are updating the same object when a
+network partition occurs.  Before the partition, client \(1\) first writes the
+object which is handled by node \(A\). Node \(A\) is also able to replicate the
+write to node \(B\) before the partition occurs. During the partition, client
+\(1\) updates the object which handled again by node \(A\) but this time it is
+not able to replicate the write to the another node. Next client \(2\) reads the
+object from \(A\) and then sends an update request for that object which is
+handled by \(B\). Now when the network partition heals, nodes \(A\) and \(B\)
+have different versions of the same object and mark it as conflicted.
+
+This is correct behaviour, but as we can see from the image, the conflict could
+have been solved automatically. Since the writes occurred sequentially, we can
+reason that the last object client \(2\) wrote to node \(B\) should be kept.
+Some AP-systems, for example Amazon's Dynamo, utilize vector clocks to track
+change history and to detect conflicts\cite{decandia2007dynamo}. Vector clock is
+an algorithm to track partial ordering of distributed
+events\cite{fidge1987timestamps}. It is consisted of a timestamp array with an
+integer clock value of each process in the network. Each time the process
+receives an internal event, the clock is incremented by one. Also when the array
+is updated, each element is set to contain the maximum of two corresponding
+values, one stored locally and one received from the sender. The value
+corresponding the sender is an exception, and it is set to be one greater than
+the value received, but only if the local value is not already greater than the
+received value.
+
+In practice this means that each object in the system is assigned with a vector
+clock that is updated with the write request. Even during network partitions we
+can keep track with vector clocks of the casual ordering and not mark sequential
+writes as conflicts.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[scale=0.7]{pictures/apexample_clocks.png}
+  \caption{Two clients updating the same object during network partition using
+  vector clocks}
+\label{ap-example-clocks}
+\end{figure}
+
+Figure~\ref{ap-example-clocks} shows the same example than above, but this time
+the object is assigned with a vector clock. Now after the network partition is
+healed, node \(A\) can tell from the vector clock that the change client \(2\)
+happened to the object that was originally hold by node \(A\) and no conflict is
+needed.
+
