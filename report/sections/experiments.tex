@@ -1,12 +1,41 @@
-\section{Experiments}
+\section{Experiments with CouchDB}
 
-Explain what was done and outcomes
+CouchDB cluster is a homogeneous cluster where every node is allowed to handle
+read and write requests from clients. By default, CouchDB does not replicate the
+objects written to any other nodes. However it is possible to trigger the
+replication either manually or automatically.
 
-\begin{itemize}
-  \item Replication
-  \item Conflicts
-  \item Clustering and partitioning
-  \item Consistency and Availability in Partitioned network state (i.e.\ what really happens)
-  \item ACIDness (?)
-  \item Load balancing (?)
-\end{itemize}
+The replication logic of CouchDB was tested by first writing numbers from 1 to
+2000 to the \texttt{lab1} and then reading triggering the replication. After the
+replication was done, the same numbers were read back from other machines. The
+same test was ran first without tampering with the network. As expected, in this
+case CouchDB replicated all the numbers correctly to the other machines, as can
+been seen from listing~\ref{listing-simplecase}.
+
+\begin{lstlisting}[caption={CouchDB replication without network anomalities},label={listing-simplecase}]
+vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ruby tests/replication.rb
+Writing numbers 0-2000
+1/2000 done.
+2/2000 done.
+3/2000 done.
+...
+1999/2000 done.
+2000/2000 done.
+Done, 2000 acknowledged. <ENTER> to continue
+
+Fetching result from lab2
+Got results. Got 2000 writes back
+Fetching result from lab3
+Got results. Got 2000 writes back
+Fetching result from lab4
+Got results. Got 2000 writes back
+Fetching result from lab5
+\end{lstlisting}
+
+Next the network was partitioned in a way that \texttt{lab1} and \texttt{lab2}
+were partitioned from rest of the cluster before starting the test. Because
+CouchDB does not require that any other node in the cluster has received the
+object before acknowledging the write, 
+
+- TODO: Get output from this and see what happens when partition is healed, then
+test conflict resolution.
