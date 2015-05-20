@@ -1,9 +1,29 @@
 \section{Conclusion}
 
-Wrap up of the report/research. 
+The paper investigated different characteristics of distributed systems.
+Distributed systems can be divided into two categories based on the
+CAP-theorem. CAP-theorem states that it is not possible for a distributed system
+to stay available and consistent at the same time. Availability means that the
+system is able to respond to every request either success or failure, and
+consistent means that all nodes of the system see the same data at the same
+time.
 
-\begin{itemize}
-  \item What was done
-  \item explain results
-  \item future work?
-\end{itemize}
+CP-systems aim to keep their data consistent at all times, and in the events of
+network partitions they give up availability. AP-systems on the other hand aim
+to remain available and might end up in a inconsistent state during a network
+partition. Neither of the approaches are ideal and contain their cave-eats that
+were discussed in this paper.
+
+This paper also studied an existing AP-system, a database called CouchDB. The
+database is a distributed object storage that heavily relies on web technologies
+such as HTTP and JSON. CouchDB has an extensive documentation that covered areas
+from the basic usage to scaling the server cluster using replication mechanics
+and clustering. However in practice, the current state of CouchDB is worse than
+was documented. The database was able to replicate documents between servers as
+promised, but marked some updates to the objects incorrectly as conflicted, even
+though with proper implementation it could have been avoided. Also, despite what
+was stated in the documentation, no clustering solution was available any more.
+
+Even though the replication in CouchDB worked decently, lack of clustering and
+relatively simple conflict detection algorithm make it unsuitable to be used in
+any real production system.
