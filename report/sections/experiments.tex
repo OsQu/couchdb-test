@@ -42,7 +42,7 @@ partition, \texttt{lab1} was only able to replicate the objects to
 \texttt{lab2}. Rest of the nodes returned \texttt{\{"error":"timeout"\}}
 indicating that the server was not able to reach the other nodes. When trying to
 read the numbers back from the machines, only \texttt{lab2} was able to return
-them, other nodes timed out. After the network partition was healed and the
+them, other nodes return no objects. After the network partition was healed and the
 replication was triggered and finished again, all the nodes were able to return
 the numbers. This is presented in the listing~\ref{listing-partition}
 
@@ -62,11 +62,11 @@ Done, 2000 acknowledged. <ENTER> to continue
 Fetching result from lab2
 Got results. Got 2000 writes back
 Fetching result from lab3
-Timed out.
+Got results. Got 0 writes back
 Fetching result from lab4
-Timed out.
+Got results. Got 0 writes back
 Fetching result from lab5
-Timed out.
+Got results. Got 0 writes back
 
 Healing the partition and trying to fetch the results again...
 
