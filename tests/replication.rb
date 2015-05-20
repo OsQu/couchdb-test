@@ -22,7 +22,7 @@ gets
   puts "Fetching result from #{name}"
   stored = []
   numbers.each do |i|
-    stored.push(client.get(i.to_s)) rescue nil
+    stored.push(client.get(i.to_s))
 
     print "."
     STDOUT.flush

@@ -30,12 +30,143 @@ Got results. Got 2000 writes back
 Fetching result from lab4
 Got results. Got 2000 writes back
 Fetching result from lab5
+Got results. Got 2000 writes back
 \end{lstlisting}
 
 Next the network was partitioned in a way that \texttt{lab1} and \texttt{lab2}
 were partitioned from rest of the cluster before starting the test. Because
 CouchDB does not require that any other node in the cluster has received the
-object before acknowledging the write, 
+object before acknowledging the write, the client got successful responses from
+all the writes. Then the replication was triggered, but due the network
+partition, \texttt{lab1} was only able to replicate the objects to
+\texttt{lab2}. Rest of the nodes returned \texttt{\{"error":"timeout"\}}
+indicating that the server was not able to reach the other nodes. When trying to
+read the numbers back from the machines, only \texttt{lab2} was able to return
+them, other nodes timed out. After the network partition was healed and the
+replication was triggered and finished again, all the nodes were able to return
+the numbers. This is presented in the listing~\ref{listing-partition}
 
-- TODO: Get output from this and see what happens when partition is healed, then
-test conflict resolution.
+\begin{lstlisting}[caption={CouchDB replication with partitioned
+network},label={listing-partition}]
+
+vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ruby tests/replication.rb
+Writing numbers 0-2000
+1/2000 done.
+2/2000 done.
+3/2000 done.
+...
+1999/2000 done.
+2000/2000 done.
+Done, 2000 acknowledged. <ENTER> to continue
+
+Fetching result from lab2
+Got results. Got 2000 writes back
+Fetching result from lab3
+Timed out.
+Fetching result from lab4
+Timed out.
+Fetching result from lab5
+Timed out.
+
+Healing the partition and trying to fetch the results again...
+
+Fetching result from lab2
+Got results. Got 2000 writes back
+Fetching result from lab3
+Got results. Got 2000 writes back
+Fetching result from lab4
+Got results. Got 2000 writes back
+Fetching result from lab5
+Got results. Got 2000 writes back
+\end{lstlisting}
+
+Same experiments were also performed using automatic replication with following
+settings:
+
+\begin{verbatim}
+{
+  source: "test",
+  target: "http://lab_host:5984/test",
+  continuous: true,
+  connection_timeout: 1000,
+  retries_per_request: 1
+}
+\end{verbatim}
+
+The results were identical to the manual version. Without any anomalies, CouchDB
+started to replicate the objects immediately. With the test case where the
+network was partitioned, CouchDB started to replicate the objects right after
+the partition was healed.
+
+Finally the replication was also tested over a lossy network, that was slow and
+dropped packets. CouchDB was able to handle the situations fairly well. In every
+case the database was able to return correct results, but all of the operations
+were much slower. The lousy network was not problem for CouchDB, because it
+communicates over HTTP-protocol, that uses TCP, which has built-in support for
+resending and fixing order of packets.
+
+Also CouchDB's ability to detect and resolve conflicts was tested. Because
+the database acknowledges the writes without requiring a consensus from other
+nodes of the cluster first, it is possible that two clients update the same
+resource at the same time in different nodes. When the nodes try to replicate
+the object to the other nodes, a conflict may occur if two nodes have a
+different version of the same object. However as discussed in AP-systems
+section, when implemented properly the database should be able to detect if
+updates to the one object happened sequentially and not mark them as conflicted.
+
+First the real conflict was tested by writing an object with same id but with
+different payload to \texttt{lab1} and \texttt{lab2}. Then replication was
+triggered manually on \texttt{lab1}. Conflicting objects were queried using a
+simple view expressed in listing~\ref{listing-conflict-view}. The function maps all the conflicting documents in an array, that can be later queried with CouchDB.
+
+\begin{lstlisting}[caption=A view to query CouchDB
+conflicts,label=listing-conflict-view]
+function(doc) {
+  if(doc._conflicts) {
+    emit(doc._conflicts, null);
+  }
+}
+\end{lstlisting}
+
+As expected, after an successful replication, CouchDB detected that the two
+different versions for the same object were conflicting and marked them as
+conflicted:
+
+\begin{lstlisting}
+vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ruby tests/conflicts.rb
+Saving id: "1", payload "a" to lab1
+Saving id: "1", payload "b" to lab2
+Press <ENTER> to query conflicts
+
+[{"id"=>"1", "key"=>["1-0ffc86a53ca35716ebb1f08d9e218819"], "value"=>nil}]
+\end{lstlisting}
+
+Secondly CouchDB's ability to detect sequential but distributed updates to the
+same object was tested. The test case followed the same structure that was
+presented in image~\ref{ap-example}. First client wrote an object to
+\texttt{lab1} and it was replicated to \texttt{lab2}. Then it updated the
+object on \texttt{lab1} but it was not replicated to the \texttt{lab2}. Finally
+another client read the object from \texttt{lab1} and updated it once more, but
+this time to \texttt{lab2}. Because all the updates were sequential and not
+really conflicting, the database should be able to determine a correct ordering
+of events and not mark the two objects conflicting when replicating the objects.
+Instead the last write \texttt{lab2} should win and be kept. Instead of
+resolving the conflict properly, CouchDB flagged the second update to
+\texttt{lab2} as conflicted as shown in listing~\ref{listing-conflict}.
+
+\begin{lstlisting}[caption=CouchDB detecting false positive conflict when updating the same object in different machines,label=listing-conflict]
+vagrant@vagrant-ubuntu-trusty-64:/vagrant$ ruby tests/conflicts.rb
+Saving id: 1, payload 'a' to lab1
+Press <ENTER> to update payload
+
+Updating id: 1 to payload 'b' to lab1
+Reading the payload from lab1 and updating it in lab2
+409 Conflict (RestClient::Conflict)
+\end{lstlisting}
+
+Actually what happened was that CouchDB did not even acknowledge the second
+update, because it was read from the another node. This harms the
+availability guarantee, because the client is not able to update an object but
+in the same node it was originally read. If that node goes unavailable, clients
+or even the cluster have no way of trying to route the update request to an
+available node.
