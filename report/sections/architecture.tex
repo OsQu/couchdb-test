@@ -18,34 +18,35 @@ available during the partition or keeps the data consistent.
 \end{figure}
 
 CP-systems endorse data consistency over availability. In practice this means
-that when a network between two or more database nodes malfunctions, the
-system should stop handling both, read and write requests from clients and wait
-until the network is healed. Failure to do so might bring the systems into an
-inconsistent state, where nodes of the system have different view of the same
-datum. Consider figure~\ref{cpimage} that shows a CP-system consisting of a
-single master node \(A\) and two slaves \(B\) and \(C\). Clients are able to
-read from all of the nodes, but only node \(A\) accepts writes. After a
-successful write, \(A\) replicates the write to the slave nodes. If the
-connection between \(A\) and \(B\) fails, the system is partitioned into two
-sets, one containing \(A\) and \(C\), and other containing only \(B\). Now if
-the client first writes a new document to \(A\) and then tries to read it from
-both \(B\) and \(C\), what happens is that \(C\) correctly returns the written
-document, but \(B\) reports that the document can not be found. This happens
-because master \(A\) was not able to replicate the new write to node \(B\)
-because the network between the nodes was down. Because now \(B\) and \(C\) have
-a different view of the same datum, the system can not be considered as
-CP-system anymore. The situation can be fixed by not accepting a write from the
-client, when the master node detects that it is not able to replicate the writes
-to all nodes. 
+that when a network between two or more database nodes is completetly
+malfunctioning, the system should stop handling both read and write requests
+from clients and wait until the network is healed. Failure to do so might bring
+the systems into an inconsistent state, where nodes of the system have
+different view of the same data. Consider Figure~\ref{cpimage} that shows a
+CP-system consisting of a single master node \(A\) and two slaves \(B\) and
+\(C\). Clients are able to read from all of the nodes, but only node \(A\)
+accepts writes. After a successful write, \(A\) replicates the write to the
+slave nodes. If the connection between \(A\) and \(B\) fails, the system is
+partitioned into two sets, one containing \(A\) and \(C\), and other containing
+only \(B\). Now if the client first writes a new document to \(A\) and then
+tries to read it from both \(B\) and \(C\), what happens is that \(C\)
+correctly returns the written document, but \(B\) reports that the document can
+not be found. This happens because master \(A\) was not able to replicate the
+new write to node \(B\) because the network between the nodes was down. Because
+now \(B\) and \(C\) have a different view of the same data, the system can not
+be considered as CP-system anymore. To fix the situation, it is sufficient to
+disable both read and write operations with \(B\) to remain consistent. When a
+failing node is healed, it can synchronize its state with other nodes and
+re-join the cluster.
 
 As in the example, a common way to model CP-systems is a master/slave
 architecture, where one node at a time acts as a master and other nodes are
 slaves. To achieve consistency, only master is able to accept write requests and
 depending on the architecture, slaves might be able to accept read requests. If
-slaves handle the read requests, the distributed system might not be consistent
-at all times. For example, node \(A\) accepted a write but did not had time to
+slaves handle the read requests, the distributed system might sometimes return
+stale data. For example, if node \(A\) accepted a write but did not had time to
 replicate it to node \(B\) when it replies to the read request accessing that
-object, the database would incorrectly report that object is not found. However
+object, the database would incorrectly report that object is not found. However,
 after \(A\) has replicated the object to \(B\) the database is again in
 consistent state. This is called eventual consistency.
 
@@ -53,22 +54,23 @@ Vogels specifies eventual consistency as a specific form of weak
 consistency~\cite{vogels2009eventually}. A system with weak consistency does not
 guarantee that subsequent accesses to the updated object always returns the
 updated object but a set of conditions need to be met before. The period between
-when the object is updated and when it is guaranteed is called
-\emph{inconsistency window}.
+when the object is updated and when it is guaranteed to be visible to all
+clients is called the \emph{inconsistency window}.
 
 In eventual consistency, the system guarantees that if no new updates are made
 to the object, eventually all access will return the updated object. In this
 case, the maximum inconsistency window in best case scenario can be calculated
 from different factors of the system, such as communication delay between nodes
 and the load of the system. Of course in exceptional events such as network
-partition the inconsistency window can grow as large as the event occur.
+partition the inconsistency window can grow as large as the event takes time.
 
 The problem that many CP-systems face is what happens when the master node
 becomes unavailable. That may occur for many reasons, for example the node can
-suffer from hardware failure or the network between master and other nodes goes
-down. Naturally the system needs to be able to recover from such cases and many
-different procedures have been developed to cope with the problem. Next we
-discuss how Raft consensus algorithm handles election of a new leader.
+suffer from a hardware failure or the network between master and other nodes
+goes down. Naturally the system needs to be able to recover from such cases and
+many different procedures have been developed to cope with the problem. Next we
+discuss how the Raft consensus algorithm~\cite{ongaro2014search} handles
+election of a new leader.
 
 Raft is a consensus algorithm developed to replace more complex algorithm Paxos.
 Raft aims to be more understandable and better uncoupled than its
@@ -78,7 +80,7 @@ in context of \emph{replicated state machines}, where each service compute
 identical copies of the same data. To achieve consistency, Raft selects a
 distinguished leader which has a complete responsibility of managing the
 replicated log and replicating them to other services. When the leader fails or
-becomes unavailable, the new leader must be elected.
+becomes unavailable, a new leader must be elected.
 
 Raft detects leader failures with heartbeats. Each node starts as a follower and
 remains in that state as long as it receives heartbeat signals from the leader.
@@ -166,12 +168,13 @@ heals, both sides try to replicate their version to the other side but run into
 a problem. Which version is correct?
 
 Some systems solve the problem by tracking the time when an update was received
-and then choosing an object with higher timestamp. This solves the problem, but
-effectively destroys updates received by the other object. The system might keep
-the discarded version safe so the user can try to manually merge the two
-versions later. It might be tempting to try to write an universal merge function
-that merges the changes from both objects in all cases. However it can be shown
-that such function does not exists\todo{how is this done?}.
+and then choosing an object with higher timestamp using the Last-Write-Wins
+(LWW) approach. This solves the problem, but effectively destroys updates
+received by the other object. The system might keep the discarded version safe
+so the user can try to manually merge the two versions later. It might be
+tempting to try to write an universal merge function that merges the changes
+from both objects in all cases. However it can be shown that such function does
+not exists.
 
 Because it is impossible for the AP-system to recover from all conflict cases, a
 careful thought should be placed on the conflict detection. Although concurrent
@@ -234,6 +237,6 @@ writes as conflicts.
 Figure~\ref{ap-example-clocks} shows the same example than above, but this time
 the object is assigned with a vector clock. Now after the network partition is
 healed, node \(A\) can tell from the vector clock that the change client \(2\)
-happened to the object that was originally hold by node \(A\) and no conflict is
+happened to the object that was originally held by node \(A\) and no conflict is
 needed.
 
