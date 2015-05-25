@@ -2,7 +2,7 @@
 
 This section introduces and analyzes common design patterns of distributed
 systems. It is divided into two subsections based on
-CAP-theorem\cite{gilbert2002brewer} that states that no distributed system can
+CAP-theorem~\cite{gilbert2002brewer} that states that no distributed system can
 achieve consistency, availability and partition tolerance at the same time. Due
 the nature of distributed systems network partitions are bound to happen, thus
 designers of distributed system need to choose whether the system remains
@@ -50,7 +50,7 @@ after \(A\) has replicated the object to \(B\) the database is again in
 consistent state. This is called eventual consistency.
 
 Vogels specifies eventual consistency as a specific form of weak
-consistency\cite{vogels2009eventually}. A system with weak consistency does not
+consistency~\cite{vogels2009eventually}. A system with weak consistency does not
 guarantee that subsequent accesses to the updated object always returns the
 updated object but a set of conditions need to be met before. The period between
 when the object is updated and when it is guaranteed is called
@@ -72,7 +72,7 @@ discuss how Raft consensus algorithm handles election of a new leader.
 
 Raft is a consensus algorithm developed to replace more complex algorithm Paxos.
 Raft aims to be more understandable and better uncoupled than its
-predecessor\cite{chiefari1998living}. Consensus algorithms allow collection of
+predecessor~\cite{ongaro2014search}. Consensus algorithms allow collection of
 services to agree on some state even when some of them fails. They often arise
 in context of \emph{replicated state machines}, where each service compute
 identical copies of the same data. To achieve consistency, Raft selects a
@@ -207,9 +207,9 @@ This is correct behaviour, but as we can see from the image, the conflict could
 have been solved automatically. Since the writes occurred sequentially, we can
 reason that the last object client \(2\) wrote to node \(B\) should be kept.
 Some AP-systems, for example Amazon's Dynamo, utilize vector clocks to track
-change history and to detect conflicts\cite{decandia2007dynamo}. Vector clock is
+change history and to detect conflicts~\cite{decandia2007dynamo}. Vector clock is
 an algorithm to track partial ordering of distributed
-events\cite{fidge1987timestamps}. It is consisted of a timestamp array with an
+events~\cite{fidge1987timestamps}. It is consisted of a timestamp array with an
 integer clock value of each process in the network. Each time the process
 receives an internal event, the clock is incremented by one. Also when the array
 is updated, each element is set to contain the maximum of two corresponding

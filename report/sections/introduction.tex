@@ -7,7 +7,7 @@ available, partition tolerant and eventually consistent.
 
 Distributed systems are often categorized to two categories based on their
 attributes. The categorization is made using CAP
-theorem\cite{gilbert2002brewer}. CAP theorem states that it is impossible for a
+theorem~\cite{gilbert2002brewer}. CAP theorem states that it is impossible for a
 web service to simultaneously guarantee \emph{consistency}, \emph{availability}
 and \emph{partition tolerance}. These properties are highly desirable for a
 distributed system.  Consistency in the CAP theorem means that there exists an
@@ -37,7 +37,7 @@ operations and they are replayed to nodes in the minority partitions when the
 partition heals. However nodes in the minority partition can not accept any
 operations, because they could be overridden by majority when the network heals
 and that would violate consistency. One example of a CP system is
-Raft consensus algorithm\cite{ongaro2014search}.\todo[inline]{Need to elaborate
+Raft consensus algorithm~\cite{ongaro2014search}.\todo[inline]{Need to elaborate
 RAFT?}
 
 AP systems guarantee availability by always accepting operations to every
@@ -59,7 +59,7 @@ feasible. It is also possible to use data types that eliminate the possibility
 of conflicts.\todo[inline]{Mention eventual consistency?}
 
 Letia et al.\ introduced Commutative Replicate Data Types
-(CRDT)\cite{letia2009crdts} which ensures that there are no conflicts between
+(CRDT)~\cite{letia2009crdts} which ensures that there are no conflicts between
 different versions of the data. They show that if concurrent updates to some
 datum commute and all the replicas execute all updates in casual order, then the
 replicas converge. This means that the system doesn't have to remain consistent

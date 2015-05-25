@@ -1,7 +1,7 @@
 \section{CouchDB}
 
 CouchDB is a distributed database that provides eventual
-consistency\cite{anderson2010couchdb}. It is designed around web technologies:
+consistency~\cite{anderson2010couchdb}. It is designed around web technologies:
 it stores its documents in JSON format and all the communication internally and
 externally is done over HTTP\@. CouchDB is modeled around high availability
 which categorizes it as AP system.
@@ -51,8 +51,8 @@ the single machine is corrupted for example due a hardware failure.
 
 It is possible to model replication differently and still have an AP system.
 Riak is a distributed database that is designed based on Amazon's Dynamo
-architecture\cite{decandia2007dynamo}. Riak stores objects associated with a key
-to the database. It uses consistent hashing\cite{karger1997consistent} to map
+architecture~\cite{decandia2007dynamo}. Riak stores objects associated with a key
+to the database. It uses consistent hashing~\cite{karger1997consistent} to map
 the keys to the data so that single machine can acts as many virtual nodes in
 the hash ring. Riak's replication is determined by multiple factors. Riak can be
 configured to replicate the data up to \texttt{N} nodes in the ring, and clients
@@ -99,7 +99,7 @@ A problem with vector clocks is that the size of the clocks might grow
 unbounded. If the same object is accessed with many clients, the object gets
 assigned with a vector clock for each client. This takes space and slows down
 algorithm detecting conflicts. For that reason, Riak has changed its conflict
-resolution algorithm to use dotted version vectors\cite{preguicca2010dotted}.
+resolution algorithm to use dotted version vectors~\cite{preguicca2010dotted}.
 Dotted version vectors work very similarly than vector clocks, but they also
 include a context (called dot) where the last update was made, and the system
 can safely discard earlier vectors that were seen by all parties.
@@ -114,14 +114,14 @@ database. Historically there were two projects that have tried to offer
 clustering capabilities on top of CouchDB\@: CouchDB Lounge and BigCouch.
 CouchDB Lounge was a standalone service that was deployed on top of CouchDB, and
 it handled routing of operations to the correct nodes as well as load balancing
-the system. Based on its GitHub page\cite{couchdbloungegithub} it has not
+the system. Based on its GitHub page~\cite{couchdbloungegithub} it has not
 received any maintenance since year 2010 but frankly, the documentation still
 mentions and encourages the use of CouchDB Lounge.
 
 Another approach to clustering was BigCouch. It was also a standalone service
 but instead of proxying commands to CouchDB instances, it internally embedded
 CouchDB and was distributed as a single package. BigCouch was modeled after
-Amazon's Dynamo paper\cite{decandia2007dynamo}, using similar consistent
+Amazon's Dynamo paper~\cite{decandia2007dynamo}, using similar consistent
 hashing, and quorum protocols were applied to read and write operations.
 BigCouch as a independent project was discountinued in January 2012, when
 Cloudant, the company behind BigCouch, announced that it will be working with
