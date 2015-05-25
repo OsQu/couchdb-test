@@ -59,17 +59,17 @@ requirements of the user, this might or might be not feasible. It is also
 possible to use data types that eliminate the possibility of conflicts.
 
 Letia et al.\ introduced Commutative Replicate Data Types
-(CRDT)~\cite{letia2009crdts} which ensures that there are no conflicts between
-different versions of the data. They show that if concurrent updates to some
-datum commute and all the replicas execute all updates in causal order, then the
-replicas will converge. This means that the system does not have to remain
-consistent at all times in order to reach consistency eventually. A simple
-example of a CRDT is \emph{set} with only addition operation. Since addition
-operation commute, it can be applied to all replicas in different order and
-still the system would reach the same final set contents. Problem with CRDTs
-are that they are not universal. While currently known CRDTs can be quite
-complex, they do not offer a solution for every problem thus their usage need
-to be considered case by case.
+(CRDT)~\cite{letia2009crdts}\cite{letia2010crdtsconf} which ensures that there
+are no conflicts between different versions of the data. They show that if
+concurrent updates to some datum commute and all the replicas execute all
+updates in causal order, then the replicas will converge. This means that the
+system does not have to remain consistent at all times in order to reach
+consistency eventually. A simple example of a CRDT is \emph{set} with only
+addition operation. Since addition operation commute, it can be applied to all
+replicas in different order and still the system would reach the same final set
+contents. Problem with CRDTs are that they are not universal. While currently
+known CRDTs can be quite complex, they do not offer a solution for every problem
+thus their usage need to be considered case by case.
 
 The structure of this paper is following: Second section will analyze different
 architectures of distributed systems, third section will introduce the case
