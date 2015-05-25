@@ -77,12 +77,11 @@ the documents. The database assigns revision id to each document it stores, and
 it is incremented by one each time the document is updated. Because multiple
 servers can update the same revision independently, the revision id also
 contains a MD5 hash of the data stored in the document. If the documents have
-different revision ids they are conflicting.\todo[inline]{Now there's plenty of
-weird stuff here: ID is basically \texttt{<rev\_num>-MD5(document)}. Is the
-algorithm able to notice consecutive edits that do not conflict and not mark
-them, what about emerging branches with different revision numbers and
-conflicting data?  Riak handles these with dotted version vectors, Dynamo with
-vector clocks.} \todo[inline]{Should MVCC be mentioned here?}
+different revision ids they are conflicting. CouchDB uses the hashes to resolve
+the conflicts in a deterministic way. Each revision includes a list of previous
+versions. First the database tries to choose a revision with a longer history
+and if they are the same size, a revision id with higher ASCII sort order is
+chosen.
 
 These problems are also present in other distributed databases that allow
 updates to the documents without having a consistent state of the data. This is
